@@ -4877,6 +4877,15 @@ public partial class CodeAssistant : ComponentBase, IAsyncDisposable
         return path?.Replace("\\", "/") ?? string.Empty;
     }
 
+    /// <summary>
+    /// 处理语言切换事件
+    /// </summary>
+    private void OnLanguageChanged(string languageCode)
+    {
+        // 页面将重新加载，无需额外操作
+        Console.WriteLine($"Language changed to: {languageCode}");
+    }
+
     #endregion
 }
 
