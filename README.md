@@ -10,6 +10,28 @@
 
 ---
 
+## 🌐 在线试用
+
+想要快速体验？无需安装，直接访问在线演示版：
+
+| 试用地址 | 账号 | 密码 |
+|----------|------|------|
+| **[https://webcode.tree456.com/](https://webcode.tree456.com/)** | `treechat` | `treechat@123` |
+
+> ⚠️ **注意**：试用环境为演示用途，请勿存储敏感信息
+
+---
+
+## 💬 交流群
+
+扫码加入微信交流群，获取最新动态、反馈问题、交流使用心得：
+
+<p align="center">
+  <img src="images/qrcode.jpg" alt="微信群二维码" width="200" />
+</p>
+
+---
+
 ## ✨ 核心特色
 
 WebCodeCli 是一个**在线 AI 编程平台**，让你可以通过 Web 浏览器远程控制各种 AI CLI 编程助手，实现真正的**随时随地编程**——无论你在地铁上、咖啡馆里，还是躺在沙发上，只要有浏览器就能写代码！
@@ -25,15 +47,24 @@ WebCodeCli 是一个**在线 AI 编程平台**，让你可以通过 Web 浏览�
 
 ## 🖥️ 支持的 AI CLI 工具
 
-| 工具 | 命令 | 特点 |
-|------|------|------|
-| **Claude Code CLI** | `claude` | MCP 服务器、会话恢复、代理系统 |
-| **Codex CLI** | `codex` | 沙箱执行、网络搜索、Git 集成 |
-| **GitHub Copilot CLI** | `copilot` | GitHub 集成、细粒度权限 |
-| **Qwen CLI** | `qwen` | YOLO 模式、检查点、扩展系统 |
-| **Gemini CLI** | `gemini` | Google AI、简洁配置 |
+### ✅ 已完整支持（流式JSON解析）
+
+| 工具 | 命令 | 特点 | 状态 |
+|------|------|------|------|
+| **Claude Code CLI** | `claude` | MCP 服务器、会话恢复、stream-json 输出、代理系统 | 🟢 已启用 |
+| **Codex CLI** | `codex` | 沙箱执行、网络搜索、Git 集成、JSONL 输出 | 🟢 已启用 |
+
+### 🔧 待扩展支持
+
+| 工具 | 命令 | 特点 | 状态 |
+|------|------|------|------|
+| **GitHub Copilot CLI** | `copilot` | GitHub 集成、细粒度权限 | 🟡 已配置，待适配 |
+| **Qwen CLI** | `qwen` | YOLO 模式、检查点、扩展系统 | 🟡 已配置，待适配 |
+| **Gemini CLI** | `gemini` | Google AI、简洁配置 | 🟡 已配置，待适配 |
 
 > 📚 详细的 CLI 工具使用说明请查看 [cli/README.md](./cli/README.md)
+> 
+> 💡 **扩展支持**：如需添加新的 CLI 工具适配器，请参考 `WebCodeCli.Domain/Domain/Service/Adapters/` 目录下的现有实现
 
 ## 📱 移动端支持
 
