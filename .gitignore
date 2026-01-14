@@ -364,7 +364,7 @@ FodyWeavers.xsd
 /WebCodeCli/appsettings.Development.json
 /WebCodeCli/WebCodeCli.db
 /Temp
-/docs
+/docs-local
 /codex
 /claude-code
 /.claude
