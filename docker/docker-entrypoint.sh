@@ -36,7 +36,7 @@ windows_wsl_setup_acknowledged = true
 name = "${CODEX_PROVIDER_NAME:-webcode codex}"
 base_url = "${CODEX_BASE_URL:-https://api.antsk.cn/v1}"
 env_key = "NEW_API_KEY"
-wire_api = "chat"
+wire_api = "${CODEX_WIRE_API:-chat}"
 
 
 [profiles.${CODEX_PROFILE:-webcode}]
