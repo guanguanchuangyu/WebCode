@@ -33,7 +33,7 @@ profile = "${CODEX_PROFILE:-webcode}"
 windows_wsl_setup_acknowledged = true
 
 [model_providers.${CODEX_PROFILE:-webcode}]
-name = "${CODEX_PROVIDER_NAME:-azure codex-mini}"
+name = "${CODEX_PROVIDER_NAME:-webcode codex}"
 base_url = "${CODEX_BASE_URL:-https://api.antsk.cn/v1}"
 env_key = "NEW_API_KEY"
 wire_api = "chat"
