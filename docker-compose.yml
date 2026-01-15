@@ -25,31 +25,35 @@ services:
       # ============================================
       - ASPNETCORE_ENVIRONMENT=Production
       - TZ=Asia/Shanghai
-      
+
       # ============================================
-      # 以下环境变量可选，首次启动时可在 Web 界面配置
+      # Claude Code 环境变量配置
       # ============================================
-      
-      # Claude Code 环境变量配置（可选，可在界面配置）
-      # - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
-      # - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN:-}
-      # - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-}
-      # - ANTHROPIC_SMALL_FAST_MODEL=${ANTHROPIC_SMALL_FAST_MODEL:-}
-      
-      # Codex 环境变量配置（可选，可在界面配置）
-      # - NEW_API_KEY=${NEW_API_KEY:-}
-      # - CODEX_MODEL=${CODEX_MODEL:-}
-      # - CODEX_BASE_URL=${CODEX_BASE_URL:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL}
+      - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL}
+      - ANTHROPIC_SMALL_FAST_MODEL=${ANTHROPIC_SMALL_FAST_MODEL}
+
+      # ============================================
+      # Codex 环境变量配置
+      # ============================================
+      - NEW_API_KEY=${NEW_API_KEY}
+      - CODEX_MODEL=${CODEX_MODEL}
+      - CODEX_MODEL_REASONING_EFFORT=${CODEX_MODEL_REASONING_EFFORT}
+      - CODEX_PROFILE=${CODEX_PROFILE}
+      - CODEX_BASE_URL=${CODEX_BASE_URL}
+      - CODEX_PROVIDER_NAME=${CODEX_PROVIDER_NAME}
+      - CODEX_WIRE_API=${CODEX_WIRE_API}
+      - CODEX_APPROVAL_POLICY=${CODEX_APPROVAL_POLICY}
+      - CODEX_SANDBOX_MODE=${CODEX_SANDBOX_MODE}
       
     volumes:
       # 数据持久化（必需）
-      - webcodecli-data:/app/data
+      - ./webcodecli-data:/app/data
       # 工作区持久化（自动挂载，无需手动配置）
-      - webcodecli-workspaces:/app/workspaces
+      - ./webcodecli-workspaces:/app/workspaces
       # 日志持久化
-      - webcodecli-logs:/app/logs
-      # 配置文件挂载
-      - /data/webcode/app/appsettings.json:/app/appsettings.json:ro
+      - ./webcodecli-logs:/app/logs
     
     # 资源限制
     deploy:
@@ -67,12 +71,3 @@ services:
       options:
         max-size: "50m"
         max-file: "5"
-
-# 命名卷
-volumes:
-  webcodecli-data:
-    driver: local
-  webcodecli-workspaces:
-    driver: local
-  webcodecli-logs:
-    driver: local
