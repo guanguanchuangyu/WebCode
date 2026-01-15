@@ -106,6 +106,12 @@
     "currentStage": "현재 단계",
     "cancel": "취소"
   },
+  "progressTracker": {
+    "stageInit": "초기화",
+    "stageAnalyze": "분석 중",
+    "stageExecute": "실행 중",
+    "stageComplete": "완료"
+  },
   "codeAssistant": {
     "title": "프로그래밍 도우미",
     "inputPlaceholder": "프로그래밍 질문 또는 요구사항을 입력하세요...",

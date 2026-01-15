@@ -185,6 +185,12 @@
     "selectFile": "파일 선택",
     "uploadToWorkspace": "작업 영역에 업로드"
   },
+  "progressTracker": {
+    "stageInit": "초기화",
+    "stageAnalyze": "분석 중",
+    "stageExecute": "실행 중",
+    "stageComplete": "완료"
+  },
   "fileSearch": {
     "debugLabel": "디버그",
     "searchPlaceholder": "검색어를 입력하세요...",

@@ -106,6 +106,12 @@
     "currentStage": "現在のステージ",
     "cancel": "キャンセル"
   },
+  "progressTracker": {
+    "stageInit": "初期化",
+    "stageAnalyze": "分析中",
+    "stageExecute": "実行中",
+    "stageComplete": "完了"
+  },
   "codeAssistant": {
     "title": "プログラミングアシスタント",
     "inputPlaceholder": "プログラミングの質問または要件を入力...",

@@ -58,7 +58,7 @@
         <!-- 信息栏 -->
         <div class="flex items-center justify-between text-sm">
             <div class="flex items-center gap-2">
-                <span class="font-semibold text-gray-700">当前阶段:</span>
+                <span class="font-semibold text-gray-700">@T("common.currentStage"):</span>
                 <span class="@GetCurrentStageTextClass() font-bold">@_currentStageText</span>
             </div>
             <div class="flex items-center gap-4">
@@ -72,11 +72,11 @@
                 {
                     <button @onclick="OnCancelClick" 
                             class="btn-default text-xs py-1 px-2 flex items-center gap-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                            title="取消操作">
+                            title="@T("common.cancel")">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        <span>取消</span>
+                        <span>@T("common.cancel")</span>
                     </button>
                 }
             </div>

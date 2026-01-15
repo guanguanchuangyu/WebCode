@@ -185,6 +185,12 @@
     "selectFile": "选择文件",
     "uploadToWorkspace": "上传到工作区"
   },
+  "progressTracker": {
+    "stageInit": "初始化",
+    "stageAnalyze": "分析中",
+    "stageExecute": "执行中",
+    "stageComplete": "完成"
+  },
   "fileSearch": {
     "debugLabel": "调试",
     "searchPlaceholder": "输入搜索内容...",

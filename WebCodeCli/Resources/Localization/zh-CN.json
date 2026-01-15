@@ -100,6 +100,12 @@
     "currentStage": "当前阶段",
     "cancel": "取消"
   },
+  "progressTracker": {
+    "stageInit": "初始化",
+    "stageAnalyze": "分析中",
+    "stageExecute": "执行中",
+    "stageComplete": "完成"
+  },
   "codeAssistant": {
     "title": "编程助手",
     "inputPlaceholder": "输入您的编程问题或需求...",
@@ -176,7 +182,7 @@
   },
   "validation": {
     "required": "此字段为必填项",
-    "minLength": "长度不能少于 {min} 个字符",
+    "minLength": "长度至少 {min} 个字符",
     "maxLength": "长度不能超过 {max} 个字符",
     "email": "请输入有效的电子邮件地址",
     "url": "请输入有效的 URL"

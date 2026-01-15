@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Components;
+using System.Text.Json;
+using WebCodeCli.Domain.Domain.Service;
 
 namespace WebCodeCli.Components;
 
 public partial class ProgressTracker : ComponentBase, IDisposable
 {
+    [Inject] private ILocalizationService L { get; set; } = default!;
     [Parameter] public bool CanCancel { get; set; } = true;
     [Parameter] public EventCallback OnCancel { get; set; }
 
@@ -16,12 +19,17 @@ public partial class ProgressTracker : ComponentBase, IDisposable
     private bool _canCancel = true;
     private bool _isCompleted = false;
     private bool _isFailed = false;
+    private string _currentStageId = string.Empty;
+    private Dictionary<string, string> _translations = new();
+    private string _currentLanguage = "zh-CN";
     
     private DateTime _startTime;
     private System.Threading.Timer? _timer;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        _currentLanguage = await L.GetCurrentLanguageAsync();
+        await LoadTranslationsAsync();
         InitializeStages();
     }
 
@@ -32,7 +40,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             new ProgressStage
             {
                 Id = "thread.started",
-                Name = "初始化",
+                Name = T("progressTracker.stageInit"),
                 Icon = "🚀",
                 Status = StageStatus.Pending,
                 ProgressWeight = 10
@@ -40,7 +48,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             new ProgressStage
             {
                 Id = "turn.started",
-                Name = "分析中",
+                Name = T("progressTracker.stageAnalyze"),
                 Icon = "💭",
                 Status = StageStatus.Pending,
                 ProgressWeight = 20
@@ -48,7 +56,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             new ProgressStage
             {
                 Id = "item.started",
-                Name = "执行中",
+                Name = T("progressTracker.stageExecute"),
                 Icon = "⚙️",
                 Status = StageStatus.Pending,
                 ProgressWeight = 60
@@ -56,7 +64,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             new ProgressStage
             {
                 Id = "turn.completed",
-                Name = "完成",
+                Name = T("progressTracker.stageComplete"),
                 Icon = "✅",
                 Status = StageStatus.Pending,
                 ProgressWeight = 10
@@ -66,12 +74,14 @@ public partial class ProgressTracker : ComponentBase, IDisposable
 
     public void Start()
     {
+        _ = RefreshTranslationsAsync();
         _isVisible = true;
         _isCompleted = false;
         _isFailed = false;
         _startTime = DateTime.Now;
         _progress = 0;
         _canCancel = CanCancel;
+        _currentStageId = "thread.started";
 
         // 重置所有阶段状态
         foreach (var stage in _stages)
@@ -112,6 +122,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
 
         // 更新当前阶段
         stage.Status = status;
+        _currentStageId = stageId;
         _currentStageText = stage.Name;
 
         if (!string.IsNullOrEmpty(detailMessage))
@@ -160,7 +171,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             activeStage.Status = StageStatus.Failed;
         }
 
-        _currentStageText = "失败";
+        _currentStageText = T("common.failed");
         _detailMessage = errorMessage;
         
         StopTimer();
@@ -178,7 +189,7 @@ public partial class ProgressTracker : ComponentBase, IDisposable
             stage.Status = StageStatus.Completed;
         }
 
-        _currentStageText = "已完成";
+        _currentStageText = T("common.completed");
         
         StopTimer();
         StateHasChanged();
@@ -199,6 +210,116 @@ public partial class ProgressTracker : ComponentBase, IDisposable
         _isVisible = false;
         StopTimer();
         StateHasChanged();
+    }
+
+    private async Task RefreshTranslationsAsync()
+    {
+        try
+        {
+            var language = await L.GetCurrentLanguageAsync();
+            if (!string.Equals(language, _currentLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                _currentLanguage = language;
+                await LoadTranslationsAsync();
+                ApplyStageTranslations();
+
+                if (!string.IsNullOrWhiteSpace(_currentStageId))
+                {
+                    var stage = _stages.FirstOrDefault(s => s.Id == _currentStageId);
+                    if (stage != null)
+                    {
+                        _currentStageText = stage.Name;
+                    }
+                }
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"刷新进度条多语言失败: {ex.Message}");
+        }
+    }
+
+    private void ApplyStageTranslations()
+    {
+        foreach (var stage in _stages)
+        {
+            stage.Name = stage.Id switch
+            {
+                "thread.started" => T("progressTracker.stageInit"),
+                "turn.started" => T("progressTracker.stageAnalyze"),
+                "item.started" => T("progressTracker.stageExecute"),
+                "turn.completed" => T("progressTracker.stageComplete"),
+                _ => stage.Name
+            };
+        }
+    }
+
+    private async Task LoadTranslationsAsync()
+    {
+        try
+        {
+            var allTranslations = await L.GetAllTranslationsAsync(_currentLanguage);
+            _translations = FlattenTranslations(allTranslations);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"加载进度条翻译资源失败: {ex.Message}");
+        }
+    }
+
+    private Dictionary<string, string> FlattenTranslations(Dictionary<string, object> source, string prefix = "")
+    {
+        var result = new Dictionary<string, string>();
+
+        foreach (var kvp in source)
+        {
+            var key = string.IsNullOrEmpty(prefix) ? kvp.Key : $"{prefix}.{kvp.Key}";
+
+            if (kvp.Value is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    var nested = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
+                    if (nested != null)
+                    {
+                        foreach (var item in FlattenTranslations(nested, key))
+                        {
+                            result[item.Key] = item.Value;
+                        }
+                    }
+                }
+                else if (jsonElement.ValueKind == JsonValueKind.String)
+                {
+                    result[key] = jsonElement.GetString() ?? key;
+                }
+            }
+            else if (kvp.Value is Dictionary<string, object> dict)
+            {
+                foreach (var item in FlattenTranslations(dict, key))
+                {
+                    result[item.Key] = item.Value;
+                }
+            }
+            else if (kvp.Value is string str)
+            {
+                result[key] = str;
+            }
+        }
+
+        return result;
+    }
+
+    private string T(string key)
+    {
+        if (_translations.TryGetValue(key, out var translation))
+        {
+            return translation;
+        }
+
+        var parts = key.Split('.');
+        return parts.Length > 0 ? parts[^1] : key;
     }
 
     private void CalculateProgress()

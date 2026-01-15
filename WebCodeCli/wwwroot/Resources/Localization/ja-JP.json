@@ -185,6 +185,12 @@
     "selectFile": "ファイルを選択",
     "uploadToWorkspace": "ワークスペースにアップロード"
   },
+  "progressTracker": {
+    "stageInit": "初期化",
+    "stageAnalyze": "分析中",
+    "stageExecute": "実行中",
+    "stageComplete": "完了"
+  },
   "fileSearch": {
     "debugLabel": "デバッグ",
     "searchPlaceholder": "検索内容を入力...",

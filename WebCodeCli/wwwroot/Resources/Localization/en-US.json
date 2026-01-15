@@ -185,6 +185,12 @@
     "selectFile": "Select File",
     "uploadToWorkspace": "Upload to Workspace"
   },
+  "progressTracker": {
+    "stageInit": "Initializing",
+    "stageAnalyze": "Analyzing",
+    "stageExecute": "Executing",
+    "stageComplete": "Completed"
+  },
   "fileSearch": {
     "debugLabel": "Debug",
     "searchPlaceholder": "Enter search text...",
