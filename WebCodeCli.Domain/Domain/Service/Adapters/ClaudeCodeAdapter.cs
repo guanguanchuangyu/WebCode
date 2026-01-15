@@ -298,7 +298,59 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         outputEvent.Title = "消息";
         outputEvent.ItemType = "agent_message";
 
-        // 提取消息内容
+        // Extract session ID
+        if (root.TryGetProperty("session_id", out var sessionIdElement))
+        {
+            outputEvent.SessionId = sessionIdElement.GetString();
+        }
+
+        // Check if there is a role field at the top level (indicating this is an assistant/user message structure)
+        var role = GetStringProperty(root, "role");
+        var isAssistant = !string.IsNullOrEmpty(role) && 
+                          role.Equals("assistant", StringComparison.OrdinalIgnoreCase);
+
+        // If content is an array, handle it like assistant/user events
+        if (root.TryGetProperty("content", out var contentProp) && contentProp.ValueKind == JsonValueKind.Array)
+        {
+            // 1) Prioritize identifying tool_use/tool_result
+            foreach (var item in contentProp.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.Object) continue;
+                var itemType = GetStringProperty(item, "type") ?? string.Empty;
+
+                if (string.Equals(itemType, "tool_use", StringComparison.OrdinalIgnoreCase))
+                {
+                    outputEvent.EventType = "tool_use";
+                    ParseToolUseFromContentItem(item, outputEvent);
+                    return;
+                }
+
+                if (string.Equals(itemType, "tool_result", StringComparison.OrdinalIgnoreCase))
+                {
+                    outputEvent.EventType = "tool_result";
+                    ParseToolResultFromContentItem(item, outputEvent);
+                    return;
+                }
+            }
+
+            // 2) Extract text content (including text and thinking types)
+            var text = ExtractTextFromContentArray(contentProp);
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                outputEvent.EventType = isAssistant ? "assistant" : "message";
+                outputEvent.Title = isAssistant ? "助手消息" : "消息";
+                outputEvent.Content = text.TrimEnd();
+                outputEvent.IsUnknown = false;
+                return;
+            }
+
+            // 3) Fallback: no recognizable content in array
+            outputEvent.Content = "消息（无可显示内容）";
+            outputEvent.IsUnknown = false;
+            return;
+        }
+
+        // Original logic: extract string type message content
         var content = GetStringProperty(root, "content") ??
                       GetStringProperty(root, "text") ??
                       GetStringProperty(root, "message");
@@ -306,12 +358,6 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         if (!string.IsNullOrEmpty(content))
         {
             outputEvent.Content = content;
-        }
-
-        // 提取会话ID
-        if (root.TryGetProperty("session_id", out var sessionIdElement))
-        {
-            outputEvent.SessionId = sessionIdElement.GetString();
         }
     }
 
@@ -566,12 +612,32 @@ public class ClaudeCodeAdapter : ICliToolAdapter
         {
             if (item.ValueKind != JsonValueKind.Object) continue;
             var itemType = GetStringProperty(item, "type") ?? string.Empty;
-            if (!string.Equals(itemType, "text", StringComparison.OrdinalIgnoreCase)) continue;
-
-            var text = GetStringProperty(item, "text");
-            if (!string.IsNullOrEmpty(text))
+            
+            // Handle type="text" content
+            if (string.Equals(itemType, "text", StringComparison.OrdinalIgnoreCase))
             {
-                sb.Append(text);
+                var text = GetStringProperty(item, "text");
+                if (!string.IsNullOrEmpty(text))
+                {
+                    sb.Append(text);
+                }
+                continue;
+            }
+            
+            // Handle type="thinking" content
+            if (string.Equals(itemType, "thinking", StringComparison.OrdinalIgnoreCase))
+            {
+                var thinking = GetStringProperty(item, "thinking");
+                if (!string.IsNullOrEmpty(thinking))
+                {
+                    // Add thinking content, optionally with identifier
+                    if (sb.Length > 0)
+                    {
+                        sb.AppendLine();
+                    }
+                    sb.Append(thinking);
+                }
+                continue;
             }
         }
         return sb.ToString();
