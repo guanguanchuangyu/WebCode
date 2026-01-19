@@ -287,6 +287,9 @@
                             Language="@_language"
                             ImageUrl="@_imagePreviewUrl"
                             HtmlUrl="@_htmlPreviewUrl"
+                            OfficePreviewUrl="@_officePreviewUrl"
+                            OfficePreviewError="@_officePreviewError"
+                            IsLoadingOffice="@_isLoadingOffice"
                             IsLoading="@_isLoadingFile"
                             CodeElementId="shared-code-preview"
                             ShowLineNumbers="true"
@@ -332,6 +335,9 @@
     private string _language = "plaintext";
     private string _imagePreviewUrl = string.Empty;
     private string _htmlPreviewUrl = string.Empty;
+    private string _officePreviewUrl = string.Empty;
+    private string _officePreviewError = string.Empty;
+    private bool _isLoadingOffice = false;
     
     // 计算属性
     private bool HasOutputEvents => _sessionInfo?.OutputEvents?.Any() == true;
@@ -481,6 +487,9 @@
         _language = "plaintext";
         _imagePreviewUrl = string.Empty;
         _htmlPreviewUrl = string.Empty;
+        _officePreviewUrl = string.Empty;
+        _officePreviewError = string.Empty;
+        _isLoadingOffice = false;
         StateHasChanged();
 
         try
@@ -499,6 +508,22 @@
             else if (_previewType == FilePreviewPanel.FilePreviewType.Html)
             {
                 _htmlPreviewUrl = $"/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
+            }
+            // 检查是否为 Office 文档
+            else if (_previewType == FilePreviewPanel.FilePreviewType.Office)
+            {
+                _isLoadingOffice = true;
+                StateHasChanged();
+
+                // 构建文件访问 URL
+                var fileUrl = $"{NavigationManager.BaseUri.TrimEnd('/')}/api/share/{ShareCode}/workspace/file/{Uri.EscapeDataString(node.Path)}?token={Uri.EscapeDataString(_accessToken)}";
+                
+                // 生成 Office 预览 URL
+                var (previewUrl, errorMessage) = FilePreviewPanel.GenerateOfficePreviewUrl(fileUrl, NavigationManager.BaseUri);
+                _officePreviewUrl = previewUrl;
+                _officePreviewError = errorMessage;
+                
+                _isLoadingOffice = false;
             }
             // 代码或文本文件
             else if (_previewType == FilePreviewPanel.FilePreviewType.Code || _previewType == FilePreviewPanel.FilePreviewType.Text)
