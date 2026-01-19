@@ -192,7 +192,10 @@
                         }
                         else if (_isHtmlFile)
                         {
-                            <iframe src="@_htmlPreviewUrl" class="w-full h-full border-0"></iframe>
+                            <iframe src="@_htmlPreviewUrl" 
+                                    class="w-full h-full border-0" 
+                                    sandbox="allow-scripts allow-same-origin"
+                                    referrerpolicy="no-referrer"></iframe>
                         }
                         else if (_isCodeFile)
                         {
@@ -286,10 +289,11 @@
     {
         try
         {
-            // 为 iframe 及其资源请求设置 Cookie
+            // 为 iframe 及其资源请求设置 Cookie（使用安全的方式，避免 eval）
             var cookieExpires = DateTime.UtcNow.AddHours(24).ToString("R");
-            await JSRuntime.InvokeVoidAsync("eval",
-                $"document.cookie = 'share_token_{ShareCode}={_accessToken}; path=/; expires={cookieExpires}; SameSite=Lax'");
+            var cookieName = $"share_token_{ShareCode}";
+            var cookieValue = Uri.EscapeDataString(_accessToken);
+            await JSRuntime.InvokeVoidAsync("setShareCookie", cookieName, cookieValue, cookieExpires);
         }
         catch
         {
