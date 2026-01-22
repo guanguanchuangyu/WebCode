@@ -2106,6 +2106,9 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     
     private bool _showUserInfo = false;
     private string _currentUsername = string.Empty;
+
+    // 设备类型检测（用于PC/移动端路由跳转）
+    private bool _hasCheckedDevice = false;
     
     private CodePreviewModal _codePreviewModal = default!;
     private EnvironmentVariableConfigModal _envConfigModal = default!;
@@ -2300,6 +2303,24 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
+            if (!_hasCheckedDevice)
+            {
+                _hasCheckedDevice = true;
+                try
+                {
+                    var isMobile = await JSRuntime.InvokeAsync<bool>("isMobileDevice");
+                    if (!isMobile)
+                    {
+                        NavigationManager.NavigateTo("/code-assistant", true);
+                        return;
+                    }
+                }
+                catch
+                {
+                    // 忽略设备检测异常，保持当前页面
+                }
+            }
+
             // 设置移动端视口
             await SetupMobileViewport();
         }
