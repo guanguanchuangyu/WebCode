@@ -1008,95 +1008,115 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
         var groups = new List<JsonlEventGroup>();
         JsonlEventGroup? activeCommandGroup = null;
         JsonlEventGroup? activeToolGroup = null;
-        
-        foreach (var evt in events)
+
+        for (var i = 0; i < events.Count; i++)
         {
+            var evt = events[i];
+
             // 检查是否为命令执行事件 (Codex)
             if (IsCodexCommandExecutionEvent(evt))
             {
-                if (activeToolGroup != null)
+                if (evt.Type == "item.started")
                 {
-                    groups.Add(activeToolGroup);
-                    activeToolGroup = null;
-                }
-                
-                if (activeCommandGroup == null)
-                {
+                    if (activeCommandGroup != null && !activeCommandGroup.IsCompleted)
+                    {
+                        activeCommandGroup.IsCompleted = true;
+                    }
+
                     activeCommandGroup = new JsonlEventGroup
                     {
-                        Id = Guid.NewGuid().ToString(),
+                        Id = $"cmd-{i}",
                         Kind = "command_execution",
                         Title = "命令执行",
-                        IsCollapsible = true
+                        IsCollapsible = true,
+                        IsCompleted = false
                     };
-                }
-                activeCommandGroup.Items.Add(evt);
-                
-                if (evt.Type == "item.completed")
-                {
-                    activeCommandGroup.IsCompleted = true;
+                    activeCommandGroup.Items.Add(evt);
                     groups.Add(activeCommandGroup);
-                    activeCommandGroup = null;
+                    continue;
                 }
-            }
-            // 检查是否为工具调用事件 (Claude Code)
-            else if (IsClaudeToolEvent(evt))
-            {
+
                 if (activeCommandGroup != null)
                 {
-                    groups.Add(activeCommandGroup);
-                    activeCommandGroup = null;
-                }
-                
-                if (activeToolGroup == null)
-                {
-                    activeToolGroup = new JsonlEventGroup
+                    activeCommandGroup.Items.Add(evt);
+                    if (evt.Type == "item.completed")
                     {
-                        Id = Guid.NewGuid().ToString(),
-                        Kind = "tool_call",
-                        Title = "工具调用",
-                        IsCollapsible = true
-                    };
+                        activeCommandGroup.IsCompleted = true;
+                        activeCommandGroup = null;
+                    }
+                    continue;
                 }
-                activeToolGroup.Items.Add(evt);
-                
-                if (evt.Type == "tool_result")
-                {
-                    activeToolGroup.IsCompleted = true;
-                    groups.Add(activeToolGroup);
-                    activeToolGroup = null;
-                }
-            }
-            else
-            {
-                // 其他事件作为单独的卡片
-                if (activeCommandGroup != null)
-                {
-                    groups.Add(activeCommandGroup);
-                    activeCommandGroup = null;
-                }
-                if (activeToolGroup != null)
-                {
-                    groups.Add(activeToolGroup);
-                    activeToolGroup = null;
-                }
-                
+
                 groups.Add(new JsonlEventGroup
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = $"evt-{i}",
                     Kind = "single",
                     Title = evt.Title,
                     IsCompleted = true,
                     IsCollapsible = false,
                     Items = { evt }
                 });
+                continue;
             }
+
+            // 检查是否为工具调用事件 (Claude Code)
+            if (IsClaudeToolEvent(evt))
+            {
+                if (evt.Type == "tool_use")
+                {
+                    if (activeToolGroup != null && !activeToolGroup.IsCompleted)
+                    {
+                        activeToolGroup.IsCompleted = true;
+                    }
+
+                    activeToolGroup = new JsonlEventGroup
+                    {
+                        Id = $"tool-{i}",
+                        Kind = "tool_call",
+                        Title = "工具调用",
+                        IsCollapsible = true,
+                        IsCompleted = false
+                    };
+                    activeToolGroup.Items.Add(evt);
+                    groups.Add(activeToolGroup);
+                    continue;
+                }
+
+                if (activeToolGroup != null)
+                {
+                    activeToolGroup.Items.Add(evt);
+                    if (evt.Type == "tool_result")
+                    {
+                        activeToolGroup.IsCompleted = true;
+                        activeToolGroup = null;
+                    }
+                    continue;
+                }
+
+                groups.Add(new JsonlEventGroup
+                {
+                    Id = $"evt-{i}",
+                    Kind = "single",
+                    Title = evt.Title,
+                    IsCompleted = true,
+                    IsCollapsible = false,
+                    Items = { evt }
+                });
+                continue;
+            }
+
+            // 其他事件作为单独的卡片
+            groups.Add(new JsonlEventGroup
+            {
+                Id = $"evt-{i}",
+                Kind = "single",
+                Title = evt.Title,
+                IsCompleted = true,
+                IsCollapsible = false,
+                Items = { evt }
+            });
         }
-        
-        // 添加未完成的组
-        if (activeCommandGroup != null) groups.Add(activeCommandGroup);
-        if (activeToolGroup != null) groups.Add(activeToolGroup);
-        
+
         return groups;
     }
     
