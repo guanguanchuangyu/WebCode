@@ -194,361 +194,96 @@
 
     <!-- 左侧聊天区 -->
     <div id="code-assistant-chat-panel" class="flex-shrink-0 bg-white/80 backdrop-blur-sm p-6 border-r border-gray-200 flex flex-col overflow-hidden shadow-lg transition-all duration-300" style="@GetChatPanelStyle()">
-        <!-- 用户信息栏 -->
-        @if (_showUserInfo)
-        {
-            <div class="mb-2 sm:mb-3 lg:mb-4 pb-2 sm:pb-3 lg:pb-4 border-b border-gray-200 flex items-center gap-2 sm:gap-3 flex-shrink-0 bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3 shadow-sm">
-                 <!-- CLI 工具选择 -->
-                 <div class="flex-1 relative min-w-0">
-                     <select @bind="_selectedToolId" 
-                             @bind:after="OnToolChanged"
-                             class="w-full px-3 sm:px-4 py-2 sm:py-2.5 pr-8 sm:pr-10 border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs sm:text-sm font-medium bg-white hover:border-gray-400 transition-all shadow-sm hover:shadow-md appearance-none cursor-pointer">
-                         @foreach (var tool in _availableTools)
-                         {
-                             <option value="@tool.Id">@tool.Name - @tool.Description</option>
-                         }
-                     </select>
-                     <div class="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 pointer-events-none">
-                         <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                         </svg>
-                     </div>
-                 </div>
-                
-                <!-- GitHub 链接 -->
-                <a href="https://github.com/xuzeyu91/WebCode" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   class="btn-default text-[10px] sm:text-xs flex items-center gap-1 sm:gap-1.5 shadow-sm hover:shadow-md transition-shadow px-2 sm:px-3 py-1.5 sm:py-2 flex-shrink-0"
-                   title="@T("codeAssistant.visitGitHub")">
-                    <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="hidden sm:inline">GitHub</span>
-                </a>
-                
-                <!-- 用户头像下拉菜单 -->
-                <div class="relative flex-shrink-0">
-                    <button @onclick="ToggleUserDropdown" 
-                            @onclick:stopPropagation="true"
-                            class="flex items-center gap-2 p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all cursor-pointer"
-                            title="@_currentUsername">
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-700 rounded-full flex items-center justify-center shadow-md">
-                            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 transition-transform @(_showUserDropdown ? "rotate-180" : "")" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    
-                    @if (_showUserDropdown)
-                    {
-                        <!-- 下拉菜单遮罩 -->
-                        <div class="fixed inset-0 z-40" @onclick="CloseUserDropdown"></div>
-                        
-                        <!-- 下拉菜单内容 -->
-                        <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 transform transition-all">
-                            <!-- 用户信息 -->
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <div class="text-[10px] sm:text-xs text-gray-500 font-medium">@T("codeAssistant.currentUser")</div>
-                                <div class="text-sm font-semibold text-gray-800 truncate">@_currentUsername</div>
-                            </div>
-                            
-                            <!-- 语言切换 -->
-                            <div class="px-2 py-2 border-b border-gray-100">
-                                <div class="px-2 py-1 text-[10px] sm:text-xs text-gray-500 font-medium">@T("codeAssistant.language")</div>
-                                <div class="px-2">
-                                    <LanguageSwitcher OnLanguageChanged="OnLanguageChangedFromDropdown" />
-                                </div>
-                            </div>
-                            
-                            <!-- 设置 -->
-                            <button @onclick="OpenEnvConfigFromDropdown" 
-                                    class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                                <span class="text-sm text-gray-700">@T("codeAssistant.settings")</span>
-                            </button>
-                            
-                            <!-- 版本号 -->
-                            <button @onclick="CheckForUpdateFromDropdown"
-                                    class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left relative"
-                                    title="@T("version.checkUpdate")">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                                </svg>
-                                <span class="text-sm text-gray-700 font-mono">v@_currentVersion</span>
-                                @if (_hasUpdate)
-                                {
-                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                                }
-                            </button>
-                            
-                            <!-- 退出 -->
-                            <button @onclick="HandleLogoutFromDropdown" 
-                                    class="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-red-50 transition-colors text-left">
-                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
-                                <span class="text-sm text-red-600">@T("codeAssistant.logout")</span>
-                            </button>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-        <!-- 头部工具栏 -->
-        <div class="flex gap-2 sm:gap-3 mb-3 sm:mb-4 lg:mb-5 flex-shrink-0 flex-wrap">
-            <TemplateLibraryModal @ref="_templateLibraryModal" OnTemplateSelected="OnTemplateSelected" />
-            <button @onclick="ToggleSessionList" 
-                    class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
-                    title="@T("codeAssistant.sessionHistory")">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="hidden sm:inline">@T("codeAssistant.sessionHistory")</span>
-            </button>
-            <button @onclick="ShowProjectManageModal" 
-                    class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
-                    title="@T("project.title")">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
-                </svg>
-                <span class="hidden sm:inline">@T("project.title")</span>
-            </button>
-            <button @onclick="ToggleContextPanel" 
-                    class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]"
-                    title="@T("codeAssistant.contextManagement")">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span class="hidden sm:inline">@T("codeAssistant.contextManagement")</span>
-            </button>
-            <button @onclick="ClearChat" 
-                    class="btn-default flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shadow-sm hover:shadow-md transition-all text-xs sm:text-sm px-3 sm:px-4 py-2 min-h-[40px] sm:min-h-[44px]">
-                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                <span class="hidden sm:inline">@T("codeAssistant.clearChat")</span>
-            </button>
-        </div>
+        <UserInfoPanel Show="@_showUserInfo"
+                       AvailableTools="@_availableTools"
+                       SelectedToolId="@_selectedToolId"
+                       SelectedToolIdChanged="@((string value) => _selectedToolId = value)"
+                       OnToolChanged="OnToolChanged"
+                       GitHubUrl="https://github.com/xuzeyu91/WebCode"
+                       GitHubTitle="@T("codeAssistant.visitGitHub")"
+                       GitHubText="GitHub"
+                       CurrentUsername="@_currentUsername"
+                       ShowUserDropdown="@_showUserDropdown"
+                       CurrentUserLabel="@T("codeAssistant.currentUser")"
+                       LanguageLabel="@T("codeAssistant.language")"
+                       SettingsText="@T("codeAssistant.settings")"
+                       CheckUpdateTitle="@T("version.checkUpdate")"
+                       CurrentVersion="@_currentVersion"
+                       HasUpdate="@_hasUpdate"
+                       LogoutText="@T("codeAssistant.logout")"
+                       OnToggleUserDropdown="ToggleUserDropdown"
+                       OnCloseUserDropdown="CloseUserDropdown"
+                       OnOpenEnvConfig="OpenEnvConfigFromDropdown"
+                       OnCheckForUpdate="CheckForUpdateFromDropdown"
+                       OnLogout="HandleLogoutFromDropdown">
+            <LanguageSwitcherContent>
+                <LanguageSwitcher OnLanguageChanged="OnLanguageChangedFromDropdown" />
+            </LanguageSwitcherContent>
+        </UserInfoPanel>
+        <ChatToolbarPanel SessionHistoryTitle="@T("codeAssistant.sessionHistory")"
+                          SessionHistoryText="@T("codeAssistant.sessionHistory")"
+                          ProjectTitle="@T("project.title")"
+                          ProjectText="@T("project.title")"
+                          ContextTitle="@T("codeAssistant.contextManagement")"
+                          ContextText="@T("codeAssistant.contextManagement")"
+                          ClearChatText="@T("codeAssistant.clearChat")"
+                          OnToggleSessionList="ToggleSessionList"
+                          OnShowProjectManage="ShowProjectManageModal"
+                          OnToggleContext="ToggleContextPanel"
+                          OnClearChat="ClearChat">
+            <LeadingContent>
+                <TemplateLibraryModal @ref="_templateLibraryModal" OnTemplateSelected="OnTemplateSelected" />
+            </LeadingContent>
+        </ChatToolbarPanel>
 
         <!-- 快捷操作面板 -->
         <QuickActionsPanel @ref="_quickActionsPanel" OnActionSelected="OnQuickActionSelected" />
 
-        <!-- 聊天消息区 -->
-        <div id="chat-messages-container" class="flex-1 overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-3 mb-3 sm:mb-4 lg:mb-5">
-            @foreach (var message in _messages)
-            {
-                <div class="@(message.Role == "user" ? "bg-white border-l-4 border-gray-300 shadow-sm" : "bg-gray-50 border-l-4 border-blue-500 shadow-sm") rounded-lg sm:rounded-xl p-3 sm:p-4 hover:shadow-md transition-all border border-gray-100 overflow-hidden">
-                    <div class="flex justify-between items-center mb-2 sm:mb-3">
-                        <div class="flex items-center gap-1.5 sm:gap-2">
-                            @if (message.Role == "user")
-                            {
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-sm">
-                                    <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                    </svg>
-                                </div>
-                                <span class="font-bold text-sm sm:text-base text-gray-700">@T("codeAssistant.user")</span>
-                            }
-                            else
-                            {
-                                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
-                                    <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                    </svg>
-                                </div>
-                                <span class="font-bold text-sm sm:text-base text-blue-700">@T("codeAssistant.assistant")</span>
-                            }
-                        </div>
-                        <span class="text-[10px] sm:text-xs text-gray-500 font-medium">@message.CreatedAt.ToString("HH:mm:ss")</span>
-                    </div>
-                    <div class="text-xs sm:text-sm">
-                        @if (message.HasError)
-                        {
-                            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-sm" role="alert">
-                                <div class="flex items-start gap-2">
-                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <span class="block">@message.ErrorMessage</span>
-                                </div>
-                            </div>
-                        }
-                        else
-                        {
-                            @if (IsJsonlContent(message.Content))
-                            {
-                                @* JSONL 格式内容，渲染为卡片 *@
-                                @((MarkupString)RenderJsonlContent(message.Content))
-                            }
-                            else
-                            {
-                                <div class="max-h-60 sm:max-h-96 overflow-y-auto text-gray-700 leading-relaxed markdown-preview" style="word-break: break-all;">@RenderMarkdown(message.Content)</div>
-                            }
-                        }
-                    </div>
-                </div>
-            }
+        <ChatMessageListPanel Messages="@_messages"
+                              IsLoading="@_isLoading"
+                              CurrentAssistantMessage="@_currentAssistantMessage"
+                              UserLabel="@T("codeAssistant.user")"
+                              AssistantLabel="@T("codeAssistant.assistant")"
+                              ThinkingText="@T("codeAssistant.thinking")"
+                              IsJsonlContent="IsJsonlContent"
+                              RenderJsonlContent="RenderJsonlContent"
+                              RenderMarkdown="RenderMarkdown" />
 
-            @if (_isLoading)
-            {
-                <div class="bg-gray-50 border-l-4 border-blue-500 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md animate-pulse overflow-hidden">
-                    <div class="flex justify-between items-center mb-2 sm:mb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
-                                <svg class="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                </svg>
-                            </div>
-                            <span class="font-bold text-sm sm:text-base text-blue-700">@T("codeAssistant.assistant")</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 sm:gap-2">
-                            <span class="text-[10px] sm:text-xs text-blue-600 font-semibold">@T("codeAssistant.thinking")</span>
-                            <div class="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-blue-600 rounded-full border-t-transparent"></div>
-                        </div>
-                    </div>
-                    <div class="text-xs sm:text-sm max-h-60 sm:max-h-96 overflow-y-auto overflow-x-hidden text-gray-700 leading-relaxed break-words">@RenderMarkdown(_currentAssistantMessage)</div>
-                </div>
-            }
-        </div>
-
-        <!-- 输入区 -->
-        <div class="border-t-2 border-gray-200 pt-3 sm:pt-4 lg:pt-5 flex-shrink-0 bg-white/50 backdrop-blur-sm rounded-t-lg sm:rounded-t-xl -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 -mb-3 sm:-mb-4 lg:-mb-6 pb-3 sm:pb-4 lg:pb-6">
-            <!-- 文件上传区域 -->
-            <div class="mb-3 flex flex-col gap-2">
-                <label class="text-[10px] sm:text-xs text-gray-600 font-medium px-1">@T("codeAssistant.uploadFile")</label>
-                <div class="flex items-center gap-2">
-                    <select @bind="_selectedUploadFolder"
-                            class="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-500 focus:border-gray-500 text-xs sm:text-sm bg-white shadow-sm hover:border-gray-300 transition-all h-10 sm:h-11">
-                        <option value="">@T("codeAssistant.rootFolder")</option>
-                        @foreach (var folder in _availableFolders)
-                        {
-                            <option value="@folder">@folder</option>
-                        }
-                    </select>
-                    <label class="btn-default flex items-center gap-1 sm:gap-1.5 h-10 sm:h-11 px-3 sm:px-4 py-2 sm:py-2.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm hover:shadow-md transition-all flex-shrink-0"
-                           title="@T("codeAssistant.uploadToWorkspace")">
-                        @if (_isUploading)
-                        {
-                            <div class="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-gray-600 rounded-full border-t-transparent"></div>
-                        }
-                        else
-                        {
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                            </svg>
-                        }
-                        <span class="hidden sm:inline">@T("codeAssistant.selectFile")</span>
-                        <InputFile OnChange="HandleFileUpload" 
-                                   disabled="@_isUploading"
-                                   class="hidden" />
-                    </label>
-                </div>
-            </div>
-            
-            <!-- 消息输入区域 -->
-            <div class="flex items-end gap-2 sm:gap-3 relative">
-                <div class="flex-1 relative">
-                    <textarea @bind="_inputMessage"
-                              @bind:event="oninput"
-                              @bind:after="HandleInput"
-                              @onkeydown="HandleKeyDown"
-                              @onkeydown:preventDefault="@(_isKeyDownEnterWithoutShift)"
-                              data-skill-tab-enabled="@(_showSkillPicker && GetFilteredSkills().Any())"
-                              id="input-message"
-                              placeholder="@T("codeAssistant.inputPlaceholder")"
-                              rows="3"
-                              maxlength="5000"
-                              disabled="@_isLoading"
-                              style="max-height: 400px;"
-                              class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-vertical disabled:bg-gray-100 disabled:cursor-not-allowed text-xs sm:text-sm bg-white shadow-sm hover:border-gray-300 transition-all overflow-x-hidden min-h-[72px]"></textarea>
-                    
-                    <!-- 自动补全下拉 -->
-                    <AutoCompleteDropdown @ref="_autoCompleteDropdown" OnSuggestionSelected="OnSuggestionSelected" TargetElementId="input-message" />
-                    
-                    <!-- 技能选择器 -->
-                    @if (_showSkillPicker)
-                    {
-                        <div class="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-80 overflow-hidden" data-skill-picker="true">
-                             <div class="px-3 py-2 border-b border-gray-200 bg-gray-50">
-                                 <div class="flex items-center gap-2">
-                                     <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                     </svg>
-                                     <span class="text-sm font-semibold text-gray-800">@T("codeAssistant.selectSkill")</span>
-                                     <span class="text-xs px-2 py-0.5 rounded-full @GetCurrentToolBadgeClass()">@GetCurrentToolName()</span>
-                                     <span class="text-xs text-gray-500 ml-auto">@GetFilteredSkills().Count / @_skills.Count</span>
-                                     @if (!string.IsNullOrEmpty(_skillFilter))
-                                     {
-                                         <span class="text-xs text-blue-600 font-medium">@T("codeAssistant.filter"): @_skillFilter</span>
-                                     }
-                                 </div>
-                             </div>
-                            <div class="overflow-y-auto max-h-60 pb-2">
-                                @if (GetFilteredSkills().Any())
-                                {
-                                    @foreach (var skill in GetFilteredSkills())
-                                    {
-                                        <div @onclick="() => SelectSkill(skill)"
-                                             title="@skill.Description"
-                                             data-skill-item="true"
-                                             class="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors">
-                                            <div class="flex items-start gap-2">
-                                                <div class="flex-shrink-0 mt-0.5">
-                                                    <svg class="w-4 h-4 @GetSkillIconColor(skill.Source)" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                </div>
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-sm font-medium text-gray-800">@skill.Name</span>
-                                                        <span class="text-[10px] px-1.5 py-0.5 rounded-full @GetSkillBadgeClass(skill.Source)">@skill.Source</span>
-                                                    </div>
-                                                    <p class="text-xs text-gray-500 mt-1 truncate">@skill.Description</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <div class="p-4 text-center text-gray-500 text-sm">
-                                        <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <p>@T("codeAssistant.noMatchingSkills")</p>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                </div>
-                <div class="flex flex-col items-end gap-1.5 sm:gap-2 flex-shrink-0">
-                    <span class="text-[10px] sm:text-xs text-gray-500 font-medium whitespace-nowrap">@(_inputMessage?.Length ?? 0) / 5000</span>
-                    <button @onclick="SendMessage"
-                            disabled="@_isLoading"
-                            class="btn-primary flex items-center gap-1.5 sm:gap-2 shadow-md hover:shadow-lg transition-all h-10 sm:h-11 px-3 sm:px-4 text-xs sm:text-sm">
-                        @if (_isLoading)
-                        {
-                            <div class="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-white rounded-full border-t-transparent"></div>
-                        }
-                        else
-                        {
-                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                            </svg>
-                        }
-                        @T("codeAssistant.send")
-                    </button>
-                </div>
-            </div>
-        </div>
+        <ChatInputPanel UploadFileText="@T("codeAssistant.uploadFile")"
+                        RootFolderText="@T("codeAssistant.rootFolder")"
+                        UploadToWorkspaceTitle="@T("codeAssistant.uploadToWorkspace")"
+                        SelectFileText="@T("codeAssistant.selectFile")"
+                        InputPlaceholder="@T("codeAssistant.inputPlaceholder")"
+                        SelectSkillText="@T("codeAssistant.selectSkill")"
+                        FilterText="@T("codeAssistant.filter")"
+                        NoMatchingSkillsText="@T("codeAssistant.noMatchingSkills")"
+                        SendText="@T("codeAssistant.send")"
+                        InputMessage="@_inputMessage"
+                        InputMessageChanged="@((string value) => _inputMessage = value)"
+                        OnAfterInput="HandleInput"
+                        OnKeyDown="HandleKeyDown"
+                        PreventDefaultOnEnter="@_isKeyDownEnterWithoutShift"
+                        IsLoading="@_isLoading"
+                        IsUploading="@_isUploading"
+                        SelectedUploadFolder="@_selectedUploadFolder"
+                        SelectedUploadFolderChanged="@((string value) => _selectedUploadFolder = value)"
+                        AvailableFolders="@_availableFolders"
+                        OnFileUpload="HandleFileUpload"
+                        ShowSkillPicker="@_showSkillPicker"
+                        FilteredSkills="@GetFilteredSkills()"
+                        AllSkillsCount="@_skills.Count"
+                        SkillFilter="@_skillFilter"
+                        CurrentToolBadgeClass="@GetCurrentToolBadgeClass()"
+                        CurrentToolName="@GetCurrentToolName()"
+                        SkillIconColor="@(skill => GetSkillIconColor(skill.Source))"
+                        SkillBadgeClass="@(skill => GetSkillBadgeClass(skill.Source))"
+                        OnSelectSkill="SelectSkill"
+                        InputLengthText="@string.Format("{0} / 5000", _inputMessage?.Length ?? 0)"
+                        OnSendMessage="SendMessage">
+            <AutoCompleteContent>
+                <AutoCompleteDropdown @ref="_autoCompleteDropdown" OnSuggestionSelected="OnSuggestionSelected" TargetElementId="input-message" />
+            </AutoCompleteContent>
+        </ChatInputPanel>
     </div>
 
   
