@@ -402,6 +402,10 @@
         _isVisible = true;
         _activeTab = "create";
         ResetForm();
+        
+        // 每次显示时重新加载翻译，确保语言切换后显示正确
+        await LoadTranslationsAsync();
+        
         StateHasChanged();
         
         await LoadExistingShares();

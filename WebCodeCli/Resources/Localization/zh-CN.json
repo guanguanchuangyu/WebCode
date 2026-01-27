@@ -248,6 +248,7 @@
     "workspaceFiles": "工作区文件",
     "htmlPreview": "HTML 预览",
     "uploadFile": "上传文件",
+    "selectFile": "选择文件",
     "noOutput": "暂无输出内容",
     "executeCode": "执行代码或发送消息后，输出将显示在这里",
     "loadingWorkspace": "正在加载工作区文件...",

@@ -295,6 +295,7 @@
     "workspaceFiles": "ワークスペースのファイル",
     "htmlPreview": "HTML プレビュー",
     "uploadFile": "ファイルをアップロード",
+    "selectFile": "ファイルを選択",
     "noOutput": "まだ出力はありません",
     "executeCode": "コードを実行するかメッセージを送信すると、出力がここに表示されます",
     "loadingWorkspace": "ワークスペースのファイルを読み込み中...",

@@ -248,6 +248,7 @@
     "workspaceFiles": "Workspace Files",
     "htmlPreview": "HTML Preview",
     "uploadFile": "Upload File",
+    "selectFile": "Select File",
     "noOutput": "No output yet",
     "executeCode": "Execute code or send a message, output will appear here",
     "loadingWorkspace": "Loading workspace files...",
