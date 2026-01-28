@@ -58,10 +58,9 @@ services:
       # 日志持久化
       - ./webcodecli-logs:/app/logs
 
-    # 使用 host 网络模式（解决某些 VPS 环境的网络问题）
-    network_mode: host
-    # 注意：使用 host 模式时，ports 配置会被忽略
-    # 应用将直接监听宿主机的 5000 端口
+    # 使用 bridge 网络模式（WSL 环境更兼容）
+    ports:
+      - "5000:5000"
 
     # 资源限制
     deploy:
