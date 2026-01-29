@@ -278,6 +278,12 @@
       // 如果已安装，不显示
       if (this.state.isInstalled) return;
 
+      // 如果由 Blazor 页面负责显示安装提示，则跳过 DOM 注入
+      if (document.querySelector('[data-pwa-blazor]')) {
+        console.log('[PWA] Blazor UI 已管理安装提示，跳过注入');
+        return;
+      }
+
       // 添加安装按钮到设置页面
       const installBtn = document.createElement('div');
       installBtn.id = 'pwa-install-prompt';
@@ -403,6 +409,26 @@
       if (installPrompt) {
         installPrompt.remove();
       }
+    },
+
+    // 设备检测与状态（供 Blazor 调用）
+    isIosDevice: function() {
+      const ua = navigator.userAgent || '';
+      const isIOSUA = /iPad|iPhone|iPod/.test(ua);
+      const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+      return (isIOSUA || isIpadOS) && !window.MSStream;
+    },
+
+    isAndroidDevice: function() {
+      return /Android/i.test(navigator.userAgent || '');
+    },
+
+    isStandalone: function() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    },
+
+    hasInstallPrompt: function() {
+      return this.state && this.state.deferredPrompt !== null;
     },
 
     // 监听应用已安装事件

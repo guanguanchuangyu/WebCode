@@ -136,6 +136,17 @@
     "stageExecute": "実行中",
     "stageComplete": "完了"
   },
+  "pwa": {
+    "addToHomeScreen": "ホーム画面に追加",
+    "installDescription": "すばやくアクセス、オフラインでも使用可能",
+    "install": "インストール",
+    "installed": "インストール済み",
+    "updateAvailable": "新しいバージョンがあります",
+    "updateNow": "今すぐ更新",
+    "iosInstallGuide": "Safariでホーム画面に追加して、より良い体験を",
+    "iosStep1": "共有をタップ",
+    "iosStep2": "ホーム画面に追加"
+  },
   "version": {
     "updateTitle": "新しいバージョンがあります",
     "checkUpdate": "更新を確認",

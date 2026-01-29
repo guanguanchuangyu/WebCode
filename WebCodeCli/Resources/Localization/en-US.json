@@ -87,6 +87,17 @@
     "stageExecute": "Executing",
     "stageComplete": "Completed"
   },
+  "pwa": {
+    "addToHomeScreen": "Add to Home Screen",
+    "installDescription": "Quick access, works offline",
+    "install": "Install",
+    "installed": "Installed",
+    "updateAvailable": "Update Available",
+    "updateNow": "Update Now",
+    "iosInstallGuide": "Add to Home Screen in Safari for a better experience",
+    "iosStep1": "Tap Share",
+    "iosStep2": "Add to Home Screen"
+  },
   "version": {
     "updateTitle": "Update Available",
     "checkUpdate": "Check for Updates",

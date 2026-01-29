@@ -136,6 +136,17 @@
     "stageExecute": "실행 중",
     "stageComplete": "완료"
   },
+  "pwa": {
+    "addToHomeScreen": "홈 화면에 추가",
+    "installDescription": "빠른 접근, 오프라인에서도 사용 가능",
+    "install": "설치",
+    "installed": "설치됨",
+    "updateAvailable": "새 버전이 있습니다",
+    "updateNow": "지금 업데이트",
+    "iosInstallGuide": "Safari에서 홈 화면에 추가하여 더 나은 경험을",
+    "iosStep1": "공유 탭",
+    "iosStep2": "홈 화면에 추가"
+  },
   "version": {
     "updateTitle": "새 버전이 있습니다",
     "checkUpdate": "업데이트 확인",
