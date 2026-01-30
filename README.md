@@ -154,6 +154,27 @@ docker compose up -d
 >
 > 🔧 需要预置环境变量/无人值守部署与内置 CLI 验证：参考 [docs/Docker-CLI-集成部署指南.md](./docs/Docker-CLI-集成部署指南.md)
 
+#### 更新 Docker 部署
+
+更新到最新版本的步骤：
+
+```bash
+# 进入项目目录
+cd WebCode
+
+# 拉取最新代码
+git pull
+
+# 停止并移除容器
+docker compose down
+
+# 删除旧镜像
+docker rmi webcodecli:latest
+
+# 重新构建并启动
+docker compose up -d
+```
+
 ### 方式二：本地开发运行
 
 #### 环境要求

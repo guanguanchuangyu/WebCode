@@ -154,6 +154,27 @@ docker compose up -d
 >
 > 🔧 For pre-provisioning (env vars / unattended deploy) and built-in CLI verification, see [docs/Docker-CLI-集成部署指南.md](./docs/Docker-CLI-集成部署指南.md)
 
+#### Updating Docker Deployment
+
+To update to the latest version:
+
+```bash
+# Navigate to project directory
+cd WebCode
+
+# Pull latest code
+git pull
+
+# Stop and remove containers
+docker compose down
+
+# Remove old image
+docker rmi webcodecli:latest
+
+# Rebuild and start
+docker compose up -d
+```
+
 ### Option 2: Local Development
 
 #### Requirements

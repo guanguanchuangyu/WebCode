@@ -222,6 +222,7 @@
             return;
         }
 
+        await InputMessageChanged.InvokeAsync(InputMessage);
         await OnAfterInput.InvokeAsync();
     }
 
