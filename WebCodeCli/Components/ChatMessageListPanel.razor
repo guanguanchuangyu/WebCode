@@ -1,5 +1,6 @@
 @using WebCodeCli.Domain.Domain.Model
 @inject IJSRuntime JSRuntime
+@implements IDisposable
 
 <div id="chat-messages-container" class="flex-1 overflow-y-auto overflow-x-hidden space-y-2 sm:space-y-3 mb-3 sm:mb-4 lg:mb-5">
     @foreach (var message in Messages)
@@ -32,7 +33,8 @@
                     <!-- Copy Button -->
                     <button @onclick="@(() => CopyMessageContent(message))" 
                             class="p-1 sm:p-1.5 rounded hover:bg-gray-200 transition-colors group relative"
-                            title="@CopyMessageLabel">
+                            title="@CopyMessageLabel"
+                            aria-label="@CopyMessageLabel">
                         @if (_copiedMessageId == message.Id)
                         {
                             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +51,8 @@
                     <!-- Fullscreen Button -->
                     <button @onclick="@(() => ShowFullscreenMessage(message))" 
                             class="p-1 sm:p-1.5 rounded hover:bg-gray-200 transition-colors group"
-                            title="@FullscreenLabel">
+                            title="@FullscreenLabel"
+                            aria-label="@FullscreenLabel">
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
                         </svg>
@@ -109,11 +112,17 @@
 <!-- Fullscreen Modal -->
 @if (_fullscreenMessage != null)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" @onclick="CloseFullscreen">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" 
+         @onclick="CloseFullscreen"
+         @onkeydown="HandleModalKeyDown"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="modal-title"
+         tabindex="-1">
         <div class="bg-white rounded-lg shadow-2xl w-11/12 h-5/6 max-w-6xl flex flex-col" @onclick:stopPropagation="true">
             <!-- Modal Header -->
             <div class="flex justify-between items-center p-4 border-b border-gray-200">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2" id="modal-title">
                     @if (_fullscreenMessage.Role == "user")
                     {
                         <div class="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center shadow-sm">
@@ -137,8 +146,10 @@
                 <div class="flex items-center gap-2">
                     <!-- Copy Button in Modal -->
                     <button @onclick="@(() => CopyMessageContent(_fullscreenMessage))" 
+                            @onclick:stopPropagation="true"
                             class="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors flex items-center gap-2"
-                            title="@CopyMessageLabel">
+                            title="@CopyMessageLabel"
+                            aria-label="@CopyMessageLabel">
                         @if (_copiedMessageId == _fullscreenMessage.Id)
                         {
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,8 +167,10 @@
                     </button>
                     <!-- Close Button -->
                     <button @onclick="CloseFullscreen" 
+                            @onclick:stopPropagation="true"
                             class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            title="@ExitFullscreenLabel">
+                            title="@ExitFullscreenLabel"
+                            aria-label="@ExitFullscreenLabel">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -211,8 +224,9 @@
     [Parameter] public Func<string, string> RenderJsonlContent { get; set; } = _ => string.Empty;
     [Parameter] public Func<string, MarkupString> RenderMarkdown { get; set; } = _ => new MarkupString(string.Empty);
 
-    private Guid? _copiedMessageId = null;
+    private string? _copiedMessageId = null;
     private ChatMessage? _fullscreenMessage = null;
+    private CancellationTokenSource? _copiedResetCts = null;
 
     private async Task CopyMessageContent(ChatMessage message)
     {
@@ -221,13 +235,33 @@
         
         if (success)
         {
+            // Cancel any pending reset operation
+            _copiedResetCts?.Cancel();
+            _copiedResetCts?.Dispose();
+            
             _copiedMessageId = message.Id;
             StateHasChanged();
             
-            // Reset the copied state after 2 seconds
-            await Task.Delay(2000);
-            _copiedMessageId = null;
-            StateHasChanged();
+            // Create new cancellation token for this operation
+            _copiedResetCts = new CancellationTokenSource();
+            var currentCts = _copiedResetCts;
+            
+            try
+            {
+                // Reset the copied state after 2 seconds
+                await Task.Delay(2000, currentCts.Token);
+                
+                // Only reset if this is still the current operation
+                if (_copiedResetCts == currentCts)
+                {
+                    _copiedMessageId = null;
+                    StateHasChanged();
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // Expected when a new copy operation starts
+            }
         }
     }
 
@@ -241,5 +275,19 @@
     {
         _fullscreenMessage = null;
         StateHasChanged();
+    }
+
+    private void HandleModalKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            CloseFullscreen();
+        }
+    }
+
+    public void Dispose()
+    {
+        _copiedResetCts?.Cancel();
+        _copiedResetCts?.Dispose();
     }
 }
