@@ -365,6 +365,7 @@
     "rootFolder": "루트",
     "emptyFolder": "이 폴더는 비어 있습니다",
     "goToFiles": "파일 보기",
+    "backToFiles": "파일로 돌아가기",
     "downloadAll": "모두 다운로드",
     "downloadAllDesc": "작업 공간의 모든 파일을 ZIP으로 다운로드",
     "errorOccurred": "오류가 발생했습니다",

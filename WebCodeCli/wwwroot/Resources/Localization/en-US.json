@@ -318,6 +318,7 @@
     "rootFolder": "Root",
     "emptyFolder": "This folder is empty",
     "goToFiles": "Go to Files",
+    "backToFiles": "Back to Files",
     "downloadAll": "Download All",
     "downloadAllDesc": "Download all workspace files as a zip",
     "errorOccurred": "Error occurred",

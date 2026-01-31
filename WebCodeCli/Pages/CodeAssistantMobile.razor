@@ -670,6 +670,13 @@
                     @T("common.upload")
                     <InputFile OnChange="HandleFileUpload" disabled="@_isUploading" class="hidden" />
                 </label>
+                <button @onclick="OpenPreviewTab"
+                        class="px-3 py-2 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 active:bg-purple-800 rounded-lg flex items-center gap-1.5 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                    @T("codeAssistant.preview")
+                </button>
                 <div class="flex-1"></div>
                 <button @onclick="RefreshWorkspaceFiles"
                         class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors">
@@ -829,47 +836,60 @@
 @{
     RenderFragment RenderPreviewView() => __builder =>
     {
-        <div class="h-full flex flex-col bg-white">
-            @if (string.IsNullOrEmpty(_selectedHtmlFile))
-            {
-                <div class="flex flex-col items-center justify-center h-full text-gray-400 px-6">
-                    <svg class="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+        <div class="h-full flex flex-col bg-white overflow-hidden">
+            <!-- 返回按钮 -->
+            <div class="flex-shrink-0 flex items-center gap-2 px-4 py-2 border-b border-gray-200 bg-gray-50">
+                <button @onclick='() => SwitchTab("files")'
+                        class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 active:bg-gray-200 rounded-lg flex items-center gap-1.5 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
-                    <p class="text-base font-medium text-gray-600 text-center">@T("codeAssistant.selectHtmlFromWorkspaceHint")</p>
-                    <button @onclick='() => SwitchTab("files")'
-                            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 active:bg-blue-800 transition-colors">
-                        @T("codeAssistant.goToFiles")
-                    </button>
-                </div>
-            }
-            else
-            {
-                <!-- 预览头部 -->
-                <div class="flex-shrink-0 flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
-                    <code class="flex-1 text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg font-mono truncate">@_selectedHtmlFile</code>
-                    <button @onclick="RefreshHtmlPreview"
-                            class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                        </svg>
-                    </button>
-                    <button @onclick="OpenHtmlInNewWindow"
-                            class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- iframe预览 -->
-                <div class="flex-1 overflow-auto">
-                    <iframe id="mobile-html-preview-frame"
-                            src="@_htmlPreviewUrl"
-                            class="w-full h-full border-0"
-                            sandbox="allow-scripts allow-same-origin"></iframe>
-                </div>
-            }
+                    @T("codeAssistant.backToFiles")
+                </button>
+                <div class="flex-1"></div>
+                <span class="text-xs font-medium text-purple-600">@T("codeAssistant.frontendProjectPreview")</span>
+            </div>
+            
+            <!-- 使用 HtmlPreviewPanel 组件 -->
+            <div class="flex-1 overflow-hidden">
+                <HtmlPreviewPanel SelectedHtmlFile="@_selectedHtmlFile"
+                                 DetectedFrontendProjects="@_detectedFrontendProjects"
+                                 AvailablePreviewRoots="@_availablePreviewRoots"
+                                 PreviewRootPath="@_previewRootPath"
+                                 ShowPreviewRootSelector="@_showPreviewRootSelector"
+                                 SelectedPreviewMode="@_selectedPreviewMode"
+                                 SelectedFrontendProject="@_selectedFrontendProject"
+                                 IsServerStarting="@_isServerStarting"
+                                 CurrentDevServer="@_currentDevServer"
+                                 HtmlPreviewUrl="@_htmlPreviewUrl"
+                                 OnTogglePreviewRootSelector="TogglePreviewRootSelector"
+                                 OnSetPreviewRootPath="SetPreviewRootPath"
+                                 OnStartPreview="StartPreview"
+                                 OnStopServer="StopCurrentServer"
+                                 OnOpenHtmlInNewWindow="OpenHtmlInNewWindow"
+                                 OnRefreshPreview="RefreshHtmlPreview"
+                                 ProjectTypeNameFactory="@(proj => FrontendProjectDetector.GetProjectTypeName(proj.Type))"
+                                 SelectHtmlHintText="@T("codeAssistant.selectHtmlFromWorkspaceHint")"
+                                 PreviewRootPathText="@T("codeAssistant.previewRootPath")"
+                                 ChangePreviewRootText="@T("codeAssistant.changePreviewRoot")"
+                                 ResetToWorkspaceRootText="@T("codeAssistant.resetToWorkspaceRoot")"
+                                 SelectPreviewRootText="@T("codeAssistant.selectPreviewRoot")"
+                                 WorkspaceRootText="@T("codeAssistant.workspaceRoot")"
+                                 FrontendPreviewText="@T("codeAssistant.frontendProjectPreview")"
+                                 PreviewModeStaticText="@T("codeAssistant.previewModeStatic")"
+                                 PreviewModeDevText="@T("codeAssistant.previewModeDev")"
+                                 PreviewModeBuildText="@T("codeAssistant.previewModeBuild")"
+                                 ServerStartingText="@T("codeAssistant.serverStarting")"
+                                 StopServerText="@T("codeAssistant.stopServer")"
+                                 StartPreviewText="@T("codeAssistant.startPreview")"
+                                 ServerRunningText="@T("codeAssistant.serverRunning")"
+                                 PortText="@T("codeAssistant.port")"
+                                 NoFrontendProjectsFoundText="@T("codeAssistant.noFrontendProjectsFound")"
+                                 TryChangePreviewRootText="@T("codeAssistant.tryChangePreviewRoot")"
+                                 PreviewText="@T("codeAssistant.preview")"
+                                 OpenInNewTabText="@T("codeAssistant.openInNewTab")"
+                                 RefreshText="@T("common.refresh")" />
+            </div>
         </div>
     };
 }

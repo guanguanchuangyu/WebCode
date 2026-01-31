@@ -365,6 +365,7 @@
     "rootFolder": "ルート",
     "emptyFolder": "このフォルダーは空です",
     "goToFiles": "ファイルを見る",
+    "backToFiles": "ファイルに戻る",
     "downloadAll": "すべてダウンロード",
     "downloadAllDesc": "ワークスペースのすべてのファイルをZIPでダウンロード",
     "errorOccurred": "エラーが発生しました",

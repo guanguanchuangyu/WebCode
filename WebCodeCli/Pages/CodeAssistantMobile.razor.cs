@@ -34,6 +34,8 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     [Inject] private IUserContextService UserContextService { get; set; } = default!;
     [Inject] private IVersionService VersionService { get; set; } = default!;
     [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] private IFrontendProjectDetector FrontendProjectDetector { get; set; } = default!;
+    [Inject] private IDevServerManager DevServerManager { get; set; } = default!;
     
     #endregion
     
@@ -2253,10 +2255,20 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
     
     #endregion
     
-    #region HTML预览
+    #region HTML预览与前端项目
     
     private string _selectedHtmlFile = string.Empty;
     private string _htmlPreviewUrl = string.Empty;
+    
+    // 前端项目检测相关
+    private List<FrontendProjectInfo> _detectedFrontendProjects = new();
+    private List<string> _availablePreviewRoots = new();
+    private string _previewRootPath = string.Empty;
+    private bool _showPreviewRootSelector = false;
+    private string _selectedPreviewMode = "static";
+    private string _selectedFrontendProject = string.Empty;
+    private bool _isServerStarting = false;
+    private DevServerInfo? _currentDevServer = null;
     
     private async Task RefreshHtmlPreview()
     {
@@ -2274,6 +2286,174 @@ public partial class CodeAssistantMobile : ComponentBase, IAsyncDisposable
         if (!string.IsNullOrEmpty(_htmlPreviewUrl))
         {
             await JSRuntime.InvokeVoidAsync("open", _htmlPreviewUrl, "_blank");
+        }
+    }
+    
+    /// <summary>
+    /// 打开预览页面
+    /// </summary>
+    private async Task OpenPreviewTab()
+    {
+        await DetectFrontendProjects();
+        SwitchTab("preview");
+    }
+    
+    /// <summary>
+    /// 检测工作区中的前端项目
+    /// </summary>
+    private async Task DetectFrontendProjects()
+    {
+        try
+        {
+            var workspacePath = CliExecutorService.GetSessionWorkspacePath(_sessionId);
+            
+            // 扫描可用的预览根目录
+            await ScanAvailablePreviewRoots(workspacePath);
+            
+            // 如果设置了自定义预览根目录，使用它
+            var searchPath = workspacePath;
+            if (!string.IsNullOrEmpty(_previewRootPath))
+            {
+                var customPath = Path.Combine(workspacePath, _previewRootPath);
+                if (Directory.Exists(customPath))
+                {
+                    searchPath = customPath;
+                }
+            }
+            
+            _detectedFrontendProjects = await FrontendProjectDetector.DetectProjectsAsync(searchPath);
+            
+            // 如果使用自定义根目录，需要调整相对路径
+            if (!string.IsNullOrEmpty(_previewRootPath) && _detectedFrontendProjects.Any())
+            {
+                foreach (var proj in _detectedFrontendProjects)
+                {
+                    if (proj.RelativePath == ".")
+                    {
+                        proj.RelativePath = _previewRootPath;
+                        proj.Key = _previewRootPath.Replace("\\", "/");
+                    }
+                    else
+                    {
+                        proj.RelativePath = Path.Combine(_previewRootPath, proj.RelativePath);
+                        proj.Key = proj.RelativePath.Replace("\\", "/");
+                    }
+                }
+            }
+            
+            if (_detectedFrontendProjects.Any() && string.IsNullOrEmpty(_selectedFrontendProject))
+            {
+                _selectedFrontendProject = _detectedFrontendProjects.First().Key;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"检测前端项目失败: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// 扫描可用的预览根目录
+    /// </summary>
+    private async Task ScanAvailablePreviewRoots(string workspacePath)
+    {
+        _availablePreviewRoots.Clear();
+        _availablePreviewRoots.Add(""); // 空字符串表示工作区根目录
+        
+        try
+        {
+            var packageJsonFiles = await Task.Run(() => 
+                Directory.GetFiles(workspacePath, "package.json", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains("node_modules"))
+                    .ToList());
+            
+            foreach (var packageJson in packageJsonFiles)
+            {
+                var dir = Path.GetDirectoryName(packageJson);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    var relativePath = Path.GetRelativePath(workspacePath, dir);
+                    if (relativePath != "." && !_availablePreviewRoots.Contains(relativePath))
+                    {
+                        _availablePreviewRoots.Add(relativePath);
+                    }
+                }
+            }
+        }
+        catch { }
+    }
+    
+    private void TogglePreviewRootSelector()
+    {
+        _showPreviewRootSelector = !_showPreviewRootSelector;
+        StateHasChanged();
+    }
+    
+    private async Task SetPreviewRootPath(string path)
+    {
+        _previewRootPath = path;
+        _showPreviewRootSelector = false;
+        await DetectFrontendProjects();
+    }
+    
+    private async Task StartPreview()
+    {
+        if (_currentDevServer != null)
+        {
+            await StopCurrentServer();
+            return;
+        }
+        
+        var project = _detectedFrontendProjects.FirstOrDefault(p => p.Key == _selectedFrontendProject);
+        if (project == null) return;
+        
+        _isServerStarting = true;
+        StateHasChanged();
+        
+        try
+        {
+            if (_selectedPreviewMode == "dev")
+            {
+                _currentDevServer = await DevServerManager.StartDevServerAsync(_sessionId, project);
+            }
+            else if (_selectedPreviewMode == "build")
+            {
+                _currentDevServer = await DevServerManager.StartBuildPreviewAsync(_sessionId, project);
+            }
+            
+            if (_currentDevServer != null)
+            {
+                _htmlPreviewUrl = _currentDevServer.ProxyUrl;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"启动预览服务器失败: {ex.Message}");
+        }
+        finally
+        {
+            _isServerStarting = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task StopCurrentServer()
+    {
+        if (_currentDevServer != null)
+        {
+            try
+            {
+                await DevServerManager.StopDevServerAsync(_sessionId, _currentDevServer.ServerKey);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"停止服务器失败: {ex.Message}");
+            }
+            _currentDevServer = null;
+            _htmlPreviewUrl = string.Empty;
+            StateHasChanged();
         }
     }
     
