@@ -734,7 +734,7 @@
       "output": "出力",
       "wrapText": "自動折り返し",
       "noOutput": "(出力なし)",
-      "selectExecutionHint": "左側から実行履歴を選択してください"
+      "selectExecutionHint": "実行履歴を選択して詳細を表示"
     }
   },
   "share": {

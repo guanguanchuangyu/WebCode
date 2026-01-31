@@ -8,18 +8,29 @@
 @inject ILogger<TaskExecutionHistoryDialog> Logger
 @inject IJSRuntime JSRuntime
 
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-[90vw] h-[92vh] max-h-[92vh] overflow-hidden flex flex-col">
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full md:w-[90vw] h-[96vh] md:h-[92vh] max-h-[96vh] md:max-h-[92vh] overflow-hidden flex flex-col">
         <!-- 标题栏 -->
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-800">@TitleText</h2>
-                @if (Task != null)
+        <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+            <div class="flex items-center gap-3">
+                @* 移动端返回按钮 *@
+                @if (_showDetailOnMobile && SelectedExecution != null)
                 {
-                    <p class="text-sm text-gray-500 mt-0.5">@Task.Name</p>
+                    <button @onclick="BackToList" class="md:hidden p-1.5 hover:bg-gray-200 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
                 }
+                <div>
+                    <h2 class="text-base md:text-lg font-semibold text-gray-800">@TitleText</h2>
+                    @if (Task != null)
+                    {
+                        <p class="text-xs md:text-sm text-gray-500 mt-0.5 truncate max-w-[200px] md:max-w-none">@Task.Name</p>
+                    }
+                </div>
             </div>
-            <button @onclick="OnClose" class="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+            <button @onclick="OnClose" class="p-2 hover:bg-gray-200 rounded-lg transition-colors flex-shrink-0">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -27,9 +38,9 @@
         </div>
         
         <!-- 内容区域 -->
-        <div class="flex-1 overflow-hidden flex min-h-0">
-            <!-- 执行列表 -->
-            <div class="w-80 border-r border-gray-200 flex flex-col bg-gray-50 min-h-0">
+        <div class="flex-1 overflow-hidden flex flex-col md:flex-row min-h-0">
+            <!-- 执行列表 - 移动端全屏或隐藏 -->
+            <div class="@(_showDetailOnMobile && SelectedExecution != null ? "hidden" : "flex") md:flex w-full md:w-72 lg:w-80 border-b md:border-b-0 md:border-r border-gray-200 flex-col bg-gray-50 min-h-0 flex-1 md:flex-none">
                 <div class="p-3 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-medium text-gray-700">@ExecutionListText</span>
@@ -100,43 +111,43 @@
                 </div>
             </div>
             
-            <!-- 执行详情 -->
-            <div class="flex-1 flex flex-col overflow-hidden min-h-0">
+            <!-- 执行详情 - 移动端全屏或隐藏 -->
+            <div class="@GetDetailPanelClasses() flex-1 flex-col overflow-hidden min-h-0">
                 @if (SelectedExecution != null)
                 {
                     <!-- 详情头部 -->
-                    <div class="p-4 border-b border-gray-200 bg-gray-50">
+                    <div class="p-3 md:p-4 border-b border-gray-200 bg-gray-50">
                         <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-medium text-gray-800">@ExecutionDetailsText</h3>
+                            <h3 class="font-medium text-gray-800 text-sm md:text-base">@ExecutionDetailsText</h3>
                             @if (SelectedExecution.Status == "Running" || SelectedExecution.Status == "Pending")
                             {
-                                <button @onclick="CancelExecution" class="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
+                                <button @onclick="CancelExecution" class="px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
                                     @CancelExecutionText
                                 </button>
                             }
                         </div>
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 text-xs md:text-sm">
+                            <div class="flex flex-wrap">
                                 <span class="text-gray-500">@StartTimeText:</span>
-                                <span class="ml-2 text-gray-800">@SelectedExecution.StartTime.ToString("yyyy-MM-dd HH:mm:ss")</span>
+                                <span class="ml-1 md:ml-2 text-gray-800">@SelectedExecution.StartTime.ToString("MM-dd HH:mm:ss")</span>
                             </div>
                             @if (SelectedExecution.EndTime.HasValue)
                             {
-                                <div>
+                                <div class="flex flex-wrap">
                                     <span class="text-gray-500">@EndTimeText:</span>
-                                    <span class="ml-2 text-gray-800">@SelectedExecution.EndTime.Value.ToString("yyyy-MM-dd HH:mm:ss")</span>
+                                    <span class="ml-1 md:ml-2 text-gray-800">@SelectedExecution.EndTime.Value.ToString("MM-dd HH:mm:ss")</span>
                                 </div>
                             }
                             @if (SelectedExecution.DurationMs.HasValue)
                             {
-                                <div>
+                                <div class="flex flex-wrap">
                                     <span class="text-gray-500">@DurationText:</span>
-                                    <span class="ml-2 text-gray-800">@FormatDuration(SelectedExecution.DurationMs.Value)</span>
+                                    <span class="ml-1 md:ml-2 text-gray-800">@FormatDuration(SelectedExecution.DurationMs.Value)</span>
                                 </div>
                             }
-                            <div>
+                            <div class="flex flex-wrap">
                                 <span class="text-gray-500">@TriggerTypeText:</span>
-                                <span class="ml-2 text-gray-800">@(SelectedExecution.TriggerType == "Manual" ? ManualText : ScheduledText)</span>
+                                <span class="ml-1 md:ml-2 text-gray-800">@(SelectedExecution.TriggerType == "Manual" ? ManualText : ScheduledText)</span>
                             </div>
                         </div>
                         @if (!string.IsNullOrEmpty(SelectedExecution.ErrorMessage))
@@ -149,9 +160,9 @@
                     
                     <!-- 输出内容 -->
                     <div class="flex-1 overflow-hidden flex flex-col min-h-0">
-                        <div class="px-4 py-2 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-                            <span class="text-sm font-medium text-gray-700">@OutputText</span>
-                            <div class="flex items-center gap-2">
+                        <div class="px-3 md:px-4 py-2 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+                            <span class="text-xs md:text-sm font-medium text-gray-700">@OutputText</span>
+                            <div class="flex items-center gap-1 md:gap-2">
                                 <button @onclick="CopyOutput" class="p-1.5 hover:bg-gray-200 rounded transition-colors" title="@CopyText">
                                     <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -166,21 +177,21 @@
                                     <span class="text-xs text-red-600">@_copyError</span>
                                 }
                                 <button @onclick="ToggleDisplayMode" 
-                                        class="p-1.5 hover:bg-gray-200 rounded transition-colors flex items-center gap-1 text-xs text-gray-600"
+                                        class="p-1 md:p-1.5 hover:bg-gray-200 rounded transition-colors flex items-center gap-1 text-xs text-gray-600"
                                         title="@(UseRichDisplay ? "切换到原始输出" : "切换到富文本显示")">
                                     @if (UseRichDisplay)
                                     {
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                                         </svg>
-                                        <span>原始</span>
+                                        <span class="hidden sm:inline">原始</span>
                                     }
                                     else
                                     {
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        <span>富文本</span>
+                                        <span class="hidden sm:inline">富文本</span>
                                     }
                                 </button>
                             </div>
@@ -204,8 +215,8 @@
                             else
                             {
                                 @* 原始输出显示 *@
-                                <div class="h-full overflow-auto p-4 bg-gray-900">
-                                    <pre class="text-sm text-gray-100 font-mono whitespace-pre-wrap break-all">@(SelectedExecution.Output ?? NoOutputText)</pre>
+                                <div class="h-full overflow-auto p-2 md:p-4 bg-gray-900">
+                                    <pre class="text-xs md:text-sm text-gray-100 font-mono whitespace-pre-wrap break-all">@(SelectedExecution.Output ?? NoOutputText)</pre>
                                 </div>
                             }
                         </div>
@@ -254,7 +265,7 @@
     [Parameter] public string CopyText { get; set; } = "复制";
     [Parameter] public string WrapTextText { get; set; } = "自动换行";
     [Parameter] public string NoOutputText { get; set; } = "(无输出)";
-    [Parameter] public string SelectExecutionHintText { get; set; } = "请从左侧选择一条执行记录";
+    [Parameter] public string SelectExecutionHintText { get; set; } = "请选择一条执行记录查看详情";
     
     // 状态
     private List<TaskExecutionEntity> Executions { get; set; } = new();
@@ -265,6 +276,7 @@
     private HashSet<string> OpenGroupIds { get; set; } = new();
     private bool _copied;
     private string _copyError = string.Empty;
+    private bool _showDetailOnMobile; // 移动端是否显示详情视图
     
     protected override async Task OnInitializedAsync()
     {
@@ -308,9 +320,33 @@
         await LoadExecutionsAsync();
     }
     
+    /// <summary>
+    /// 移动端返回列表视图
+    /// </summary>
+    private void BackToList()
+    {
+        _showDetailOnMobile = false;
+        StateHasChanged();
+    }
+    
+    /// <summary>
+    /// 获取详情面板的CSS类
+    /// </summary>
+    private string GetDetailPanelClasses()
+    {
+        // 移动端：只有在_showDetailOnMobile为true且有选中项时才显示
+        // 桌面端：始终显示
+        if (_showDetailOnMobile && SelectedExecution != null)
+        {
+            return "flex"; // 移动端显示详情
+        }
+        return "hidden md:flex"; // 移动端隐藏，桌面端显示
+    }
+    
     private async Task SelectExecution(TaskExecutionEntity execution)
     {
         SelectedExecution = execution;
+        _showDetailOnMobile = true; // 移动端选择后切换到详情视图
         
         // 如果输出为空或者是正在运行的任务，重新获取详情
         if (string.IsNullOrEmpty(execution.Output) || execution.Status == "Running")

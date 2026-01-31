@@ -736,7 +736,7 @@
       "output": "Output",
       "wrapText": "Wrap Text",
       "noOutput": "(No output)",
-      "selectExecutionHint": "Select an execution from the left"
+      "selectExecutionHint": "Select an execution to view details"
     }
   },
   "share": {

@@ -734,7 +734,7 @@
       "output": "출력",
       "wrapText": "자동 줄바꿈",
       "noOutput": "(출력 없음)",
-      "selectExecutionHint": "왼쪽에서 실행 기록을 선택하세요"
+      "selectExecutionHint": "실행 기록을 선택하여 세부 정보를 확인하세요"
     }
   },
   "share": {

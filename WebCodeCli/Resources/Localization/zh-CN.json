@@ -734,7 +734,7 @@
       "output": "输出",
       "wrapText": "自动换行",
       "noOutput": "(无输出)",
-      "selectExecutionHint": "请从左侧选择一条执行记录"
+      "selectExecutionHint": "请选择一条执行记录查看详情"
     }
   },
   "share": {
